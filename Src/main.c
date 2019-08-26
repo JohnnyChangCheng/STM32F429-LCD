@@ -20,8 +20,11 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "mario_sprite.h"
+#include "mario_jump.h"
+#include "pic.h"
 #include "ILI9341/ILI9341_STM32_Driver.h"
-
+#include "ILI9341/ILI9341_GFX.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -56,6 +59,50 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_USART1_UART_Init(void);
+
+static void HellowGarmin(void)
+{
+ 
+  char Greeting[5][16] = {"Hi", "Hi..","Hi...", "Hi....", "Hi....."};
+  ILI9341_Set_Rotation(SCREEN_HORIZONTAL_1);
+  ILI9341_Fill_Screen(ORANGE);
+  for(uint8_t i = 0 ; i < 5 ; ++i)
+  {
+    ILI9341_Draw_Text(Greeting[i], 10, 10, BLACK, 2, ORANGE);   
+    HAL_Delay(1000);
+  }
+  ILI9341_Draw_Text("This demo program is ", 10, 25, BLACK, 2, ORANGE); 
+  HAL_Delay(500);  
+  ILI9341_Draw_Text("for Garmin interview.", 20, 40, BLACK, 2, ORANGE); 
+  HAL_Delay(500);  
+  ILI9341_Draw_Text("STM32F429 ", 10, 55, BLACK, 2, ORANGE); 
+  ILI9341_Draw_Text("and ILI9341.", 20, 70, BLACK, 2, ORANGE); 
+  HAL_Delay(500);
+  ILI9341_Draw_Text("Made by Johnny Chang", 10, 220, BLACK, 2, WHITE); 
+
+}
+static void Mario_Jump(uint32_t x, uint32_t y)
+{
+  int i = 0;
+  uint32_t move_thresh[] = {10, 16, 20, 23, 25, 27 ,30 };
+  ILI9341_Draw_Image(mario_bin, SCREEN_HORIZONTAL_1);
+  ILI9341_Draw_Pics(mario_raw, x-16, y-21, 16 , 21);
+  for( i = 0 ; i < 6 ; ++i )
+  {
+    ILI9341_Draw_Filled_Rectangle_Coord(x-16,y-51,x+5,y,0x547F);
+    ILI9341_Draw_Pics(mario_jump_raw, x-16, y-21 - move_thresh[i], 21 , 21);
+    HAL_Delay(50);
+  }
+  --i;
+  for( ; i >= 0;i--)
+  {
+    ILI9341_Draw_Filled_Rectangle_Coord(x-16,y-51,x+5,y,0x547F);
+    ILI9341_Draw_Pics(mario_jump_raw, x-16, y-21 - move_thresh[i], 21 , 21);
+    HAL_Delay(50);
+  }
+  ILI9341_Draw_Filled_Rectangle_Coord(x-16,y-51,x+5,y,0x547F);
+  ILI9341_Draw_Pics(mario_raw, x-16, y-21, 16 , 21);
+}
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -105,28 +152,16 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-  ILI9341_Fill_Screen(BLACK);
-  uint8_t TxData[10]= "01234abcde";
-  HAL_UART_Transmit(&huart1,TxData,10,0xffff);
-  HAL_Delay(1000);
-  ILI9341_Fill_Screen(ORANGE);
-  char Temp_Buffer_text[32] = {0};
-  for(uint16_t i = 0; i <= 10; i++)
-  {
-      sprintf(Temp_Buffer_text, "Counting: %d", i);
-      ILI9341_Draw_Text(Temp_Buffer_text, 10, 10, BLACK, 2, WHITE);		
-      ILI9341_Draw_Text(Temp_Buffer_text, 10, 30, BLUE, 2, WHITE);
-      ILI9341_Draw_Text(Temp_Buffer_text, 10, 50, RED, 2, WHITE);
-      ILI9341_Draw_Text(Temp_Buffer_text, 10, 70, GREEN, 2, WHITE);
-      ILI9341_Draw_Text(Temp_Buffer_text, 10, 90, BLACK, 2, WHITE);
-      ILI9341_Draw_Text(Temp_Buffer_text, 10, 110, BLUE, 2, WHITE);
-      ILI9341_Draw_Text(Temp_Buffer_text, 10, 130, RED, 2, WHITE);
-      ILI9341_Draw_Text(Temp_Buffer_text, 10, 150, GREEN, 2, WHITE);
-      ILI9341_Draw_Text(Temp_Buffer_text, 10, 170, WHITE, 2, BLACK);
-      ILI9341_Draw_Text(Temp_Buffer_text, 10, 190, BLUE, 2, BLACK);   
-      ILI9341_Draw_Text(Temp_Buffer_text, 10, 210, RED, 2, BLACK);
-      HAL_Delay(1000);		
-	}
+    ILI9341_Fill_Screen(BLACK);
+    HAL_Delay(1000);
+    HellowGarmin();
+    HAL_Delay(1000);  
+  
+   while(1){
+    Mario_Jump(35,221);
+    
+    HAL_Delay(1000);  
+    }
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */

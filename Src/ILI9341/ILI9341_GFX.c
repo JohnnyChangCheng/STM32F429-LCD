@@ -267,7 +267,25 @@ void ILI9341_Draw_Text(const char* Text, uint8_t X, uint8_t Y, uint16_t Colour, 
         X += CHAR_WIDTH*Size;
     }
 }
-
+void ILI9341_Draw_Pics(const char* Image_Array, uint8_t x, uint8_t y ,uint8_t w ,uint8_t h)
+{
+	uint8_t temp_buffer[240*320*2] = {0};
+	int remain_space = 0;
+	ILI9341_Set_Address(x, y, x+w-1, y+h-1);
+	HAL_GPIO_WritePin(GPIOC, DC_Pin, GPIO_PIN_SET);	
+	HAL_GPIO_WritePin(GPIOC, CS_Pin, GPIO_PIN_RESET);
+	for(uint32_t i = 0; i < w*h*2 ; i+= BURST_MAX_SIZE)
+	{		
+		remain_space = ( w*h*2- BURST_MAX_SIZE ) > BURST_MAX_SIZE ? BURST_MAX_SIZE : ( w*h*2);							
+		for(uint32_t j = 0 ; j < remain_space ; j+= 2)
+		{
+			temp_buffer[j] = Image_Array[j+1];
+			temp_buffer[j+1] = Image_Array[j];
+		}
+		HAL_SPI_Transmit(HSPI_INSTANCE, (unsigned char*)temp_buffer, remain_space , 10);			
+	}
+	HAL_GPIO_WritePin(GPIOC, CS_Pin, GPIO_PIN_SET);
+}
 /*Draws a full screen picture from flash. Image converted from RGB .jpeg/other to C array using online converter*/
 //USING CONVERTER: http://www.digole.com/tools/PicturetoC_Hex_converter.php
 //65K colour (2Bytes / Pixel)
@@ -285,9 +303,10 @@ void ILI9341_Draw_Image(const char* Image_Array, uint8_t Orientation)
 		uint32_t counter = 0;
 		for(uint32_t i = 0; i < ILI9341_SCREEN_WIDTH*ILI9341_SCREEN_HEIGHT*2/BURST_MAX_SIZE; i++)
 		{			
-				for(uint32_t k = 0; k< BURST_MAX_SIZE; k++)
+				for(uint32_t k = 0; k< BURST_MAX_SIZE; k+=2)
 				{
-					Temp_small_buffer[k]	= Image_Array[counter+k];		
+					Temp_small_buffer[k]	= Image_Array[counter+k+1];	
+					Temp_small_buffer[k+1]	= Image_Array[counter+k];		
 				}						
 				HAL_SPI_Transmit(HSPI_INSTANCE, (unsigned char*)Temp_small_buffer, BURST_MAX_SIZE, 10);	
 				counter += BURST_MAX_SIZE;			
